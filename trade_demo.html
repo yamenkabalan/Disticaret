@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Türkiye Dış Ticaret KDS — Gerçek Kaggle Verisi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+:root{--bg:#05080f;--s1:#0a1020;--s2:#0e1830;--border:#162540;--a1:#3bf0a0;--a2:#ff7b51;--a3:#6ea8fe;--a4:#ffd166;--text:#dde8f5;--muted:#4a6a9a;--red:#ff5e7d}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(59,240,160,.04),transparent),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(110,168,254,.05),transparent);pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 20px 60px}
+header{padding:48px 0 36px;text-align:center;position:relative}
+.lang-btn{position:absolute;top:20px;right:0;display:flex;gap:6px}
+.lang-opt{background:var(--s1);border:1px solid var(--border);color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;letter-spacing:1px;padding:6px 14px;border-radius:8px;cursor:pointer;transition:all .2s}
+.lang-opt.active{background:rgba(59,240,160,.12);border-color:rgba(59,240,160,.4);color:var(--a1)}
+.lang-opt:hover:not(.active){border-color:var(--a3);color:var(--a3)}
+.pill{display:inline-flex;align-items:center;gap:8px;background:rgba(59,240,160,.08);border:1px solid rgba(59,240,160,.25);color:var(--a1);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:18px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--a1);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+h1{font-size:clamp(26px,5vw,50px);font-weight:700;letter-spacing:-1px;line-height:1.1;background:linear-gradient(130deg,#dde8f5 0%,var(--a1) 45%,var(--a3) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:10px}
+.sub{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.5px}
+.sources{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:22px 0 36px}
+.src-tag{display:inline-flex;align-items:center;gap:6px;background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--muted)}
+.src-tag a{color:var(--a3);text-decoration:none}.src-tag a:hover{text-decoration:underline}
+.src-tag::before{content:'⬡';color:var(--a1);font-size:10px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:30px}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:20px 18px;position:relative;overflow:hidden;transition:transform .2s,border-color .2s}
+.kpi:hover{transform:translateY(-2px);border-color:var(--kc,var(--a1))}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--a1))}
+.kpi-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:8px}
+.kpi-val{font-size:28px;font-weight:700;color:var(--kc,var(--a1));line-height:1}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:5px;font-family:'IBM Plex Mono',monospace}
+.sec{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--a1);margin:32px 0 14px;display:flex;align-items:center;gap:10px}
+.sec::after{content:'';flex:1;height:1px;background:var(--border)}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:24px;margin-bottom:20px;transition:border-color .2s}
+.card:hover{border-color:rgba(59,240,160,.2)}
+.card h3{font-size:15px;font-weight:600;margin-bottom:4px}
+.card-desc{font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:20px}
+.ch{position:relative;height:300px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:740px){.grid2{grid-template-columns:1fr}}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;padding:10px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--border)}
+.tbl td{padding:12px 14px;font-size:13px;border-bottom:1px solid rgba(22,37,64,.7)}
+.tbl tr:last-child td{border:none}
+.tbl tr:hover td{background:rgba(59,240,160,.03)}
+.badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:500}
+.b1{background:rgba(59,240,160,.12);color:var(--a1)}.b2{background:rgba(255,123,81,.12);color:var(--a2)}.b3{background:rgba(110,168,254,.12);color:var(--a3)}
+.g{color:var(--a1)}.o{color:var(--a2)}.r{color:var(--red)}.y{color:var(--a4)}
+.inp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin:16px 0}
+.ig label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin-bottom:7px}
+.ig input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-size:14px;font-family:'IBM Plex Sans',sans-serif;transition:border-color .2s}
+.ig input:focus{outline:none;border-color:var(--a1)}
+.btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--a1),var(--a3));color:#05080f;border:none;border-radius:10px;padding:12px 24px;font-size:14px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;transition:opacity .2s,transform .2s;margin-top:6px}
+.btn:hover{opacity:.88;transform:translateY(-1px)}
+.res{background:linear-gradient(135deg,rgba(59,240,160,.06),rgba(110,168,254,.06));border:1px solid rgba(59,240,160,.2);border-radius:14px;padding:24px;margin-top:18px;display:none}
+.res.show{display:block;animation:fi .35s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.res-num{font-size:48px;font-weight:700;color:var(--a1);line-height:1}
+.res-unit{font-size:16px;color:var(--muted);margin-top:4px}
+.res-detail{margin-top:14px;font-size:12px;color:var(--muted);line-height:2;font-family:'IBM Plex Mono',monospace}
+.cv-row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.cv-chip{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:12px;font-family:'IBM Plex Mono',monospace}
+.cv-chip .yr{color:var(--a4);font-weight:600}
+.cv-chip .diff{color:var(--muted)}
+footer{text-align:center;padding:28px;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;border-top:1px solid var(--border);margin-top:40px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="lang-btn">
+    <button class="lang-opt active" id="btn-tr" onclick="setLang('tr')">TR</button>
+    <button class="lang-opt" id="btn-en" onclick="setLang('en')">EN</button>
+  </div>
+  <div class="pill"><span class="dot"></span><span data-i18n="pill"></span></div>
+  <h1 data-i18n="h1"></h1>
+  <p class="sub">Normal Denklem · SVD Pseudo-Inverse · PCA Regresyon</p>
+</header>
+
+<div class="sources">
+  <div class="src-tag">Kaggle DS1: <a href="https://www.kaggle.com/datasets/muhammadtalhaawan/world-export-and-import-dataset" target="_blank">World Export &amp; Import Dataset</a></div>
+  <div class="src-tag">Kaggle DS2: <a href="https://www.kaggle.com/datasets/veselagencheva/macro-economic-indicators-dataset-country-level" target="_blank">Macro-Economic Indicators</a></div>
+  <div class="src-tag">Kaggle DS3: <a href="https://www.kaggle.com/datasets/appetukhov/international-trade-database" target="_blank">International Trade Database</a></div>
+</div>
+
+<!-- KPI -->
+<div class="kpi-row">
+  <div class="kpi" style="--kc:var(--a1)">
+    <div class="kpi-label">R² (LSQ / SVD)</div>
+    <div class="kpi-val">0.9981</div>
+    <div class="kpi-sub" data-i18n="kpi_realdata"></div>
+  </div>
+  <div class="kpi" style="--kc:var(--a2)">
+    <div class="kpi-label">RMSE</div>
+    <div class="kpi-val">3.70 B$</div>
+    <div class="kpi-sub" data-i18n="kpi_avgerr"></div>
+  </div>
+  <div class="kpi" style="--kc:var(--a3)">
+    <div class="kpi-label" data-i18n="kpi_export2021_lbl"></div>
+    <div class="kpi-val">330.9 B$</div>
+    <div class="kpi-sub" data-i18n="kpi_actualval"></div>
+  </div>
+  <div class="kpi" style="--kc:var(--a4)">
+    <div class="kpi-label">κ(X) SVD</div>
+    <div class="kpi-val">7.85</div>
+    <div class="kpi-sub">σ_max / σ_min</div>
+  </div>
+  <div class="kpi" style="--kc:var(--a1)">
+    <div class="kpi-label" data-i18n="kpi_datapts_lbl"></div>
+    <div class="kpi-val" data-i18n="kpi_datapts_val"></div>
+    <div class="kpi-sub">2000 – 2021</div>
+  </div>
+  <div class="kpi" style="--kc:var(--a3)">
+    <div class="kpi-label" data-i18n="kpi_pca_lbl"></div>
+    <div class="kpi-val">3 / 5</div>
+    <div class="kpi-sub" data-i18n="kpi_pca_sub"></div>
+  </div>
+</div>
+
+<!-- CROSS VAL -->
+<div class="sec" data-i18n="sec_crossval"></div>
+<div class="card">
+  <h3 data-i18n="cv_title"></h3>
+  <div class="card-desc" data-i18n="cv_desc"></div>
+  <div class="cv-row">
+    <div class="cv-chip"><span class="yr">2005</span><br>DS1: 154.1 B$ / DS3: 147.0 B$ <span class="diff">(4.7%)</span></div>
+    <div class="cv-chip"><span class="yr">2010</span><br>DS1: 235.9 B$ / DS3: 227.8 B$ <span class="diff">(3.5%)</span></div>
+    <div class="cv-chip"><span class="yr">2015</span><br>DS1: 262.0 B$ / DS3: 302.0 B$ <span class="diff">(15.2%)</span></div>
+    <div class="cv-chip"><span class="yr">2019</span><br>DS1: 267.3 B$ / DS3: 361.7 B$ <span class="diff">(35.3%)</span></div>
+    <div class="cv-chip"><span class="yr">2021</span><br>DS1: 330.9 B$ / DS3: 450.4 B$ <span class="diff">(36.1%)</span></div>
+  </div>
+  <div style="font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace" data-i18n="cv_note"></div>
+</div>
+
+<!-- MAIN CHART -->
+<div class="sec" data-i18n="sec_results"></div>
+<div class="card">
+  <h3 data-i18n="main_title"></h3>
+  <div class="card-desc">β = (XᵀX)⁻¹Xᵀy &nbsp;|&nbsp; β = VΣ⁺Uᵀy &nbsp;|&nbsp; Z = X·Vₖᵀ → PCA <span data-i18n="pca_reg_word"></span></div>
+  <div class="ch" style="height:320px"><canvas id="mainChart"></canvas></div>
+</div>
+
+<!-- TRADE CHART -->
+<div class="card">
+  <h3 data-i18n="trade_title"></h3>
+  <div class="card-desc" data-i18n="trade_desc"></div>
+  <div class="ch" style="height:260px"><canvas id="tradeChart"></canvas></div>
+</div>
+
+<!-- SVD + PCA -->
+<div class="grid2">
+  <div class="card">
+    <h3 data-i18n="svd_title"></h3>
+    <div class="card-desc">X = UΣVᵀ &nbsp;·&nbsp; κ(X) = 7.85</div>
+    <div class="ch" style="height:220px"><canvas id="svdChart"></canvas></div>
+  </div>
+  <div class="card">
+    <h3 data-i18n="pca_title"></h3>
+    <div class="card-desc" data-i18n="pca_desc"></div>
+    <div class="ch" style="height:220px"><canvas id="pcaChart"></canvas></div>
+  </div>
+</div>
+
+<!-- COEFFICIENTS -->
+<div class="card">
+  <h3 data-i18n="coef_title"></h3>
+  <div class="card-desc" data-i18n="coef_desc"></div>
+  <div class="ch" style="height:240px"><canvas id="coefChart"></canvas></div>
+</div>
+
+<!-- MACRO -->
+<div class="grid2">
+  <div class="card">
+    <h3 data-i18n="inf_title"></h3>
+    <div class="card-desc" data-i18n="inf_desc"></div>
+    <div class="ch" style="height:220px"><canvas id="infChart"></canvas></div>
+  </div>
+  <div class="card">
+    <h3 data-i18n="tariff_title"></h3>
+    <div class="card-desc" data-i18n="tariff_desc"></div>
+    <div class="ch" style="height:220px"><canvas id="tariffChart"></canvas></div>
+  </div>
+</div>
+
+<!-- METHOD TABLE -->
+<div class="sec" data-i18n="sec_methods"></div>
+<div class="card">
+  <table class="tbl">
+    <thead>
+      <tr>
+        <th data-i18n="th_method"></th>
+        <th data-i18n="th_formula"></th>
+        <th>R²</th>
+        <th data-i18n="th_rmse"></th>
+        <th data-i18n="th_mae"></th>
+        <th data-i18n="th_vars"></th>
+        <th data-i18n="th_adv"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge b1" data-i18n="m1_name"></span></td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--a3)">β=(XᵀX)⁻¹Xᵀy</td>
+        <td class="g">0.9981</td><td class="y">3.70</td><td class="y">2.96</td><td>6</td>
+        <td style="font-size:12px;color:var(--muted)" data-i18n="m1_adv"></td>
+      </tr>
+      <tr>
+        <td><span class="badge b2" data-i18n="m2_name"></span></td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--a2)">β=VΣ⁺Uᵀy</td>
+        <td class="g">0.9981</td><td class="y">3.70</td><td class="y">2.96</td><td>6</td>
+        <td style="font-size:12px;color:var(--muted)" data-i18n="m2_adv"></td>
+      </tr>
+      <tr>
+        <td><span class="badge b3">PCA Regresyon</span></td>
+        <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--a3)">Z=X·Vₖᵀ</td>
+        <td class="o">0.8657</td><td class="r">31.21</td><td class="r">25.38</td><td>3</td>
+        <td style="font-size:12px;color:var(--muted)" data-i18n="m3_adv"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- PREDICTOR -->
+<div class="sec" data-i18n="sec_pred"></div>
+<div class="card">
+  <h3 data-i18n="pred_title"></h3>
+  <div class="card-desc" data-i18n="pred_desc"></div>
+  <div class="inp-grid">
+    <div class="ig"><label data-i18n="inp0"></label><input type="number" id="i0" value="4.5" step="0.1"></div>
+    <div class="ig"><label data-i18n="inp1"></label><input type="number" id="i1" value="64.8" step="1"></div>
+    <div class="ig"><label data-i18n="inp2"></label><input type="number" id="i2" value="8.5" step="0.1"></div>
+    <div class="ig"><label data-i18n="inp3"></label><input type="number" id="i3" value="140" step="1"></div>
+    <div class="ig"><label data-i18n="inp4"></label><input type="number" id="i4" value="0.65" step="0.01"></div>
+  </div>
+  <button class="btn" onclick="predict()" data-i18n="btn_predict"></button>
+  <div class="res" id="res">
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-family:'IBM Plex Mono';margin-bottom:10px">SVD Model — ŷ = VΣ⁺Uᵀy</div>
+    <div class="res-num" id="res-num">—</div>
+    <div class="res-unit" data-i18n="res_unit"></div>
+    <div class="res-detail" id="res-detail"></div>
+  </div>
+</div>
+
+</div><!-- wrap -->
+
+<footer>
+  <span data-i18n="footer_title"></span> &nbsp;·&nbsp;
+  Data: Kaggle (Awan 2023 · Gencheva n.d. · Appetukhov 2022) &nbsp;·&nbsp;
+  Methods: LSQ · SVD · PCA &nbsp;·&nbsp;
+  <span data-i18n="footer_proj"></span>
+</footer>
+
+<script>
+/* ── Translations ─────────────────────────────────────────────────────── */
+const T = {
+  tr: {
+    pill:             'Gerçek Kaggle Verisi · 2000–2021',
+    h1:               'Türkiye Dış Ticaret<br>Karar Destek Sistemi',
+    kpi_realdata:     'Gerçek Kaggle verisi',
+    kpi_avgerr:       'Ortalama hata',
+    kpi_export2021_lbl:'2021 İhracat',
+    kpi_actualval:    'Gerçek değer',
+    kpi_datapts_lbl:  'Veri Noktası',
+    kpi_datapts_val:  '22 Yıl',
+    kpi_pca_lbl:      'PCA Bileşenleri',
+    kpi_pca_sub:      '%92.3 varyans',
+    sec_crossval:     'Çapraz Doğrulama (DS1 vs DS3)',
+    cv_title:         'İhracat Değeri — İki Kaggle Veri Seti Karşılaştırması',
+    cv_desc:          'WEI Veri Seti (DS1) vs International Trade Database (DS3) — UN Comtrade kaynaklı',
+    cv_note:          '⚠ DS3, re-export ve transit ticaret akışlarını da kapsadığından sistematik olarak yüksek değerler üretmektedir. DS1 (WEI) doğrudan mal ihracatını ölçmekte olup model için birincil kaynak olarak kullanılmıştır.',
+    sec_results:      'Tahmin Sonuçları',
+    main_title:       'Gerçek ve Tahmin Edilen İhracat (2000–2021)',
+    pca_reg_word:     'Regresyon',
+    trade_title:      'İhracat ve İthalat Trendi (Kaggle DS1)',
+    trade_desc:       'Türkiye dış ticaret hacmi — WEI Veri Seti (Awan, 2023)',
+    svd_title:        'SVD Tekil Değerleri',
+    pca_title:        'PCA Varyans Analizi',
+    pca_desc:         'k=3 bileşen → %92.3 varyans',
+    coef_title:       'Regresyon Katsayıları β — Değişken Etki Büyüklüğü',
+    coef_desc:        'Standardize değişkenler üzerinden hesaplanmıştır (Kaggle DS1 + DS2)',
+    inf_title:        'Enflasyon Serisi (Kaggle DS2)',
+    inf_desc:         'Makroekonomik Göstergeler — 2020–2021 doğrulaması DS2 ile yapılmıştır',
+    tariff_title:     'MFN Tarife Oranı (Kaggle DS1)',
+    tariff_desc:      'En Yüksek Destekli Ülke tarife oranı (%)',
+    sec_methods:      'Yöntem Karşılaştırması',
+    th_method:        'Yöntem',
+    th_formula:       'Formül',
+    th_rmse:          'RMSE (Milyar$)',
+    th_mae:           'MAE (Milyar$)',
+    th_vars:          'Değişken',
+    th_adv:           'Avantaj',
+    m1_name:          'Normal Denklem',
+    m1_adv:           'Kapalı form, hızlı',
+    m2_name:          'SVD Pseudo-inv.',
+    m2_adv:           'Sayısal kararlılık',
+    m3_adv:           'Boyut indirgeme',
+    sec_pred:         'İnteraktif Senaryo Tahmini',
+    pred_title:       'Gerçek Zamanlı İhracat Tahmini — SVD Pseudo-Inverse Modeli',
+    pred_desc:        'Makroekonomik parametreleri girin → β = VΣ⁺Uᵀy ile hesaplanır',
+    inp0:             'Ülke Büyüme Oranı (%)',
+    inp1:             'Enflasyon (%)',
+    inp2:             'MFN Tarife Oranı (%)',
+    inp3:             'Ticaret Açıklığı (endeks)',
+    inp4:             'İthalat/İhracat Oranı',
+    btn_predict:      '⬡ Tahmin Et',
+    res_unit:         'Milyar USD Yıllık İhracat Tahmini',
+    footer_title:     'Türkiye Dış Ticaret KDS',
+    footer_proj:      'Lineer Cebir Final Projesi 2026',
+    // chart dataset labels
+    ch_actual:        'Gerçek İhracat',
+    ch_lsq:           'LSQ / SVD Tahmini',
+    ch_pca:           'PCA Tahmini',
+    ch_exports:       'İhracat',
+    ch_imports:       'İthalat',
+    ch_sv:            'Tekil Değer',
+    ch_var:           'Varyans %',
+    ch_cum:           'Kümülatif %',
+    ch_beta:          'β (standardize)',
+    ch_inf:           'Enflasyon (%)',
+    ch_tariff:        'MFN Tarife (%)',
+    // coef x-axis
+    coef_labels:      ['Ülke\nBüyümesi','Enflasyon','MFN\nTarife','Ticaret\nAçıklığı','İth/İhr\nOranı'],
+    // predictor feature names
+    feat_names:       ['Ülke Büyümesi','Enflasyon','MFN Tarife','Ticaret Açıklığı','İth/İhr Oranı'],
+    intercept:        'Sabit',
+    alert_fill:       'Lütfen tüm alanları doldurun.',
+  },
+  en: {
+    pill:             'Real Kaggle Data · 2000–2021',
+    h1:               'Turkey Foreign Trade<br>Decision Support System',
+    kpi_realdata:     'Real Kaggle data',
+    kpi_avgerr:       'Average error',
+    kpi_export2021_lbl:'2021 Exports',
+    kpi_actualval:    'Actual value',
+    kpi_datapts_lbl:  'Data Points',
+    kpi_datapts_val:  '22 Years',
+    kpi_pca_lbl:      'PCA Components',
+    kpi_pca_sub:      '92.3% variance',
+    sec_crossval:     'Cross Validation (DS1 vs DS3)',
+    cv_title:         'Export Value — Comparison of Two Kaggle Datasets',
+    cv_desc:          'WEI Dataset (DS1) vs International Trade Database (DS3) — based on UN Comtrade',
+    cv_note:          '⚠ DS3 produces systematically higher values as it also includes re-export and transit trade flows. DS1 (WEI) measures direct goods exports and was used as the primary source for the model.',
+    sec_results:      'Prediction Results',
+    main_title:       'Actual vs Predicted Exports (2000–2021)',
+    pca_reg_word:     'Regression',
+    trade_title:      'Export and Import Trend (Kaggle DS1)',
+    trade_desc:       'Turkey foreign trade volume — WEI Dataset (Awan, 2023)',
+    svd_title:        'SVD Singular Values',
+    pca_title:        'PCA Variance Analysis',
+    pca_desc:         'k=3 components → 92.3% variance',
+    coef_title:       'Regression Coefficients β — Variable Effect Size',
+    coef_desc:        'Calculated over standardized variables (Kaggle DS1 + DS2)',
+    inf_title:        'Inflation Series (Kaggle DS2)',
+    inf_desc:         'Macro-Economic Indicators — 2020–2021 verification from DS2',
+    tariff_title:     'MFN Tariff Rate (Kaggle DS1)',
+    tariff_desc:      'Most Favored Nation tariff rate (%)',
+    sec_methods:      'Method Comparison',
+    th_method:        'Method',
+    th_formula:       'Formula',
+    th_rmse:          'RMSE (B$)',
+    th_mae:           'MAE (B$)',
+    th_vars:          'Variables',
+    th_adv:           'Advantage',
+    m1_name:          'Normal Equation',
+    m1_adv:           'Closed form, fast',
+    m2_name:          'SVD Pseudo-inv.',
+    m2_adv:           'Numerical stability',
+    m3_adv:           'Dimensionality reduction',
+    sec_pred:         'Interactive Scenario Prediction',
+    pred_title:       'Real-time Export Prediction — SVD Pseudo-Inverse Model',
+    pred_desc:        'Enter macroeconomic parameters → calculated with β = VΣ⁺Uᵀy',
+    inp0:             'Country Growth (%)',
+    inp1:             'Inflation (%)',
+    inp2:             'MFN Tariff (%)',
+    inp3:             'Trade Openness (index)',
+    inp4:             'Import/Export Ratio',
+    btn_predict:      '⬡ Predict',
+    res_unit:         'Billion USD Annual Export Prediction',
+    footer_title:     'Turkey Foreign Trade DSS',
+    footer_proj:      'Linear Algebra Final Project 2026',
+    ch_actual:        'Actual Exports',
+    ch_lsq:           'LSQ / SVD Prediction',
+    ch_pca:           'PCA Prediction',
+    ch_exports:       'Exports',
+    ch_imports:       'Imports',
+    ch_sv:            'Singular Value',
+    ch_var:           'Variance %',
+    ch_cum:           'Cumulative %',
+    ch_beta:          'β (standardized)',
+    ch_inf:           'Inflation (%)',
+    ch_tariff:        'MFN Tariff (%)',
+    coef_labels:      ['Country\nGrowth','Inflation','MFN\nTariff','Trade\nOpenness','Imp/Exp\nRatio'],
+    feat_names:       ['Country Growth','Inflation','MFN Tariff','Trade Openness','Imp/Exp Ratio'],
+    intercept:        'Intercept',
+    alert_fill:       'Please fill in all fields.',
+  }
+};
+
+/* ── Data ─────────────────────────────────────────────────────────────── */
+const D = {
+  years:[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021],
+  exp:  [77.53,55.36,69.5,95.42,134.52,154.13,179.79,211.07,252.13,184.07,235.93,297.87,288.09,312.23,303.07,262.01,258.31,301.63,291.64,267.29,269.11,330.89],
+  imp:  [25.98,30.52,36.45,47.48,62.38,69.14,81.36,104.32,127.0,96.87,106.52,124.93,130.86,137.18,145.04,136.9,139.74,153.99,173.72,172.11,156.53,213.61],
+  lstsq:[86.02,46.93,65.57,94.69,135.93,157.9,181.56,210.48,250.9,188.58,233.77,292.04,286.37,307.84,302.02,264.5,259.89,299.15,294.05,270.9,269.38,333.14],
+  pca:  [10.07,43.08,87.71,143.43,195.86,184.1,198.67,237.3,251.91,217.85,244.06,258.76,253.13,264.35,271.75,258.52,269.65,290.33,282.57,273.86,285.79,308.83],
+  inf:  [54.9,54.4,29.7,18.4,9.3,7.7,9.6,8.8,10.1,6.3,8.6,6.5,8.9,7.5,8.2,7.7,8.5,11.9,16.3,15.2,14.79,28.97],
+  tariff:[11.93,11.3,11.86,10.74,9.65,9.96,9.68,9.15,9.12,9.03,8.97,8.97,8.77,8.79,8.54,8.76,8.62,8.33,8.75,9.17,8.4,8.59],
+  sv:   [7.6786,5.4269,4.6904,3.6226,2.7402,0.9782],
+  pcaEV:[53.60,26.77,11.93,6.83,0.87],
+  pcaCum:[53.60,80.37,92.30,99.13,100.0],
+  coefV:[-1.8084,-3.1051,0.8786,87.5592,-10.7383],
+  beta: [219.6178,-1.8084,-3.1051,0.8786,87.5592,-10.7383],
+  mu:   [4.8614,16.0119,9.4127,100.0,0.5037],
+  sigma:[9.5388,13.7472,1.0609,40.1219,0.0714],
+};
+
+/* ── Chart defaults ───────────────────────────────────────────────────── */
+Chart.defaults.color='#4a6a9a';
+Chart.defaults.borderColor='rgba(22,37,64,.7)';
+Chart.defaults.font.family="'IBM Plex Mono',monospace";
+const tip={backgroundColor:'#0a1020',borderColor:'rgba(59,240,160,.25)',borderWidth:1,titleColor:'#dde8f5',bodyColor:'#4a6a9a',padding:12};
+
+/* ── Chart instances ──────────────────────────────────────────────────── */
+let charts = {};
+
+function buildCharts(l) {
+  const t = T[l];
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+
+  charts.main = new Chart('mainChart',{type:'line',data:{labels:D.years,datasets:[
+    {label:t.ch_actual, data:D.exp,  borderColor:'#3bf0a0',backgroundColor:'rgba(59,240,160,.07)',borderWidth:2.5,pointRadius:4,fill:true,tension:.3},
+    {label:t.ch_lsq,    data:D.lstsq,borderColor:'#ff7b51',borderWidth:2,borderDash:[7,3],pointRadius:3,fill:false,tension:.3},
+    {label:t.ch_pca,    data:D.pca,  borderColor:'#6ea8fe',borderWidth:2,borderDash:[3,3],pointRadius:3,fill:false,tension:.3},
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{usePointStyle:true,color:'#dde8f5'}},tooltip:{...tip,callbacks:{label:c=>` ${c.dataset.label}: $${c.raw.toFixed(1)}B`}}},
+    scales:{x:{grid:{color:'rgba(22,37,64,.6)'}},y:{grid:{color:'rgba(22,37,64,.6)'},ticks:{callback:v=>'$'+v+'B'}}}}});
+
+  charts.trade = new Chart('tradeChart',{type:'bar',data:{labels:D.years,datasets:[
+    {label:t.ch_exports,data:D.exp,backgroundColor:'rgba(59,240,160,.35)',borderColor:'#3bf0a0',borderWidth:1.5,borderRadius:4},
+    {label:t.ch_imports,data:D.imp,backgroundColor:'rgba(255,123,81,.3)', borderColor:'#ff7b51',borderWidth:1.5,borderRadius:4},
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{usePointStyle:true,color:'#dde8f5'}},tooltip:{...tip,callbacks:{label:c=>` ${c.dataset.label}: $${c.raw.toFixed(1)}B`}}},
+    scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(22,37,64,.6)'},ticks:{callback:v=>'$'+v+'B'}}}}});
+
+  charts.svd = new Chart('svdChart',{type:'bar',data:{labels:D.sv.map((_,i)=>'σ'+(i+1)),datasets:[{
+    label:t.ch_sv,data:D.sv,
+    backgroundColor:D.sv.map((_,i)=>`rgba(110,168,254,${1-i*.13})`),borderRadius:5
+  }]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:tip},
+    scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(22,37,64,.6)'}}}}});
+
+  charts.pca = new Chart('pcaChart',{type:'bar',data:{labels:D.pcaEV.map((_,i)=>'PC'+(i+1)),datasets:[
+    {label:t.ch_var,data:D.pcaEV,backgroundColor:'rgba(59,240,160,.3)',borderColor:'#3bf0a0',borderWidth:1.5,borderRadius:5,yAxisID:'y'},
+    {label:t.ch_cum,data:D.pcaCum,type:'line',borderColor:'#ffd166',borderWidth:2,pointRadius:4,fill:false,yAxisID:'y'},
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{usePointStyle:true,color:'#dde8f5'}},tooltip:tip},
+    scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(22,37,64,.6)'},ticks:{callback:v=>v+'%'}}}}});
+
+  charts.coef = new Chart('coefChart',{type:'bar',data:{labels:t.coef_labels,datasets:[{
+    label:t.ch_beta,data:D.coefV,
+    backgroundColor:D.coefV.map(v=>v>0?'rgba(59,240,160,.4)':'rgba(255,94,125,.4)'),
+    borderColor:D.coefV.map(v=>v>0?'#3bf0a0':'#ff5e7d'),
+    borderWidth:1.5,borderRadius:7
+  }]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>` β = ${c.raw.toFixed(4)}`}}},
+    scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(22,37,64,.6)'}}}}});
+
+  charts.inf = new Chart('infChart',{type:'line',data:{labels:D.years,datasets:[{
+    label:t.ch_inf,data:D.inf,borderColor:'#ffd166',
+    backgroundColor:'rgba(255,209,102,.08)',borderWidth:2,pointRadius:3,fill:true,tension:.3
+  }]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>` ${c.raw.toFixed(1)}%`}}},
+    scales:{x:{grid:{color:'rgba(22,37,64,.6)'}},y:{grid:{color:'rgba(22,37,64,.6)'},ticks:{callback:v=>v+'%'}}}}});
+
+  charts.tariff = new Chart('tariffChart',{type:'line',data:{labels:D.years,datasets:[{
+    label:t.ch_tariff,data:D.tariff,borderColor:'#ff7b51',
+    backgroundColor:'rgba(255,123,81,.08)',borderWidth:2,pointRadius:3,fill:true,tension:.3
+  }]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>` ${c.raw.toFixed(2)}%`}}},
+    scales:{x:{grid:{color:'rgba(22,37,64,.6)'}},y:{grid:{color:'rgba(22,37,64,.6)'},ticks:{callback:v=>v+'%'}}}}});
+}
+
+/* ── Language switcher ────────────────────────────────────────────────── */
+let currentLang = 'tr';
+
+function setLang(l) {
+  currentLang = l;
+  const t = T[l];
+  document.documentElement.lang = l;
+
+  // Update all data-i18n elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (t[key] !== undefined) el.innerHTML = t[key];
+  });
+
+  // Toggle active button
+  document.getElementById('btn-tr').classList.toggle('active', l === 'tr');
+  document.getElementById('btn-en').classList.toggle('active', l === 'en');
+
+  // Update sub line (methods stay same across languages)
+  const sub = document.querySelector('.sub');
+  if (l === 'tr') sub.textContent = 'Normal Denklem · SVD Pseudo-Inverse · PCA Regresyon';
+  else            sub.textContent = 'Normal Equation · SVD Pseudo-Inverse · PCA Regression';
+
+  // Rebuild charts with new language labels
+  buildCharts(l);
+}
+
+/* ── Predictor ────────────────────────────────────────────────────────── */
+function predict() {
+  const t = T[currentLang];
+  const vals = [0,1,2,3,4].map(i => parseFloat(document.getElementById('i'+i).value));
+  if (vals.some(isNaN)) { alert(t.alert_fill); return; }
+  const xs   = vals.map((v,i) => (v - D.mu[i]) / D.sigma[i]);
+  const xb   = [1, ...xs];
+  const pred = D.beta.reduce((s,b,i) => s + b*xb[i], 0);
+  const result = Math.max(pred, 0);
+  document.getElementById('res-num').textContent = result.toFixed(2);
+  const parts = D.beta.slice(1).map((b,i) => {
+    const c = b * xs[i];
+    return `${t.feat_names[i]}: ${c>0?'+':''}${c.toFixed(1)} B$`;
+  });
+  document.getElementById('res-detail').innerHTML =
+    `${t.intercept}: +${D.beta[0].toFixed(1)} B$<br>` + parts.join(' &nbsp;|&nbsp; ');
+  const el = document.getElementById('res');
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+}
+
+/* ── Init ─────────────────────────────────────────────────────────────── */
+setLang('tr');
+</script>
+</body>
+</html>
